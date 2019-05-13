@@ -50,15 +50,18 @@ default
         integer lINTEGER__time_now_month=(integer)lSTRING__time_now_month; // Local integer to convert the current string month to a number
         lSTRING__time_now_month=llList2String(gLIST__month_name,(lINTEGER__time_now_month-1)); // update and change the month number to an actual name
         string lSTRING__time_now_day=llGetSubString(lSTRING__time_now, 8, 9); // Local integer to set the current day 
-        if (lSTRING__time_now_day == "01" || lSTRING__time_now_day == "21" || lSTRING__time_now_day == "31")
+        // lSTRING__time_now_day="03"; // Used for testing
+        integer lINTEGER__time_now_day=(integer)lSTRING__time_now_day; // Create a integer to hold the string value stripped of any leading 0 (zero)
+        lSTRING__time_now_day=(string)lINTEGER__time_now_day; // Pass back the stripped integer to the string  
+        if (lSTRING__time_now_day == "1" || lSTRING__time_now_day == "21" || lSTRING__time_now_day == "31")
         {
             lSTRING__time_now_day=lSTRING__time_now_day + "st "; // Set the "01", "21" and "31" to "01st ", "21st " and "31st "
         }
-        else if (lSTRING__time_now_day == "02" || lSTRING__time_now_day == "22")
+        else if (lSTRING__time_now_day == "2" || lSTRING__time_now_day == "22")
         {
             lSTRING__time_now_day=lSTRING__time_now_day + "nd "; // Set the "02" and "22" to "02nd " and "22nd "
         }
-        else if (lSTRING__time_now_day == "03" || lSTRING__time_now_day == "23")
+        else if (lSTRING__time_now_day == "3" || lSTRING__time_now_day == "23")
         {
             lSTRING__time_now_day=lSTRING__time_now_day + "rd "; // Set the "03" and "23" to "03rd " and "23rd "
         }
