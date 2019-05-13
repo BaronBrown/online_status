@@ -1,5 +1,6 @@
 // Alternative Profile Picture v0.1 by djphil (CC-BY-NC-SA 2.0 BE) (https://forums.osgrid.org/viewtopic.php?f=5&t=5920)
 // Heavily modified by Baron Brown @ OSgrid May 2019
+string gSTRING__timezone="GMT"; // Set the timezone for your local time
 list gLIST__month_name = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; // Global list to hold the month names
 key gKEY__owner_key; // Global key to hold the key of the objects owners key
 string gSTRING__owner_name; // Global string variable to hold the object owners name
@@ -77,7 +78,7 @@ default
             lSTRING__data = "online"; // Set the local variable to online
             gVECTOR__set_text_colour=<0.0, 1.0, 0.0>; // Set the text colour to green
             llSetObjectDesc(lSTRING__time_now); // Set the object description with the current time
-            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + " and\n" + gSTRING__owner_name + " is " + lSTRING__data + ".",gVECTOR__set_text_colour,1); // Set the object text
+            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + gSTRING__timezone + " and\n" + gSTRING__owner_name + " is " + lSTRING__data + ".",gVECTOR__set_text_colour,1); // Set the object text
         }
         else
         {
@@ -108,7 +109,7 @@ default
             string lSTRING__time_last_seen_hour=llGetSubString(lSTRING__time_last_seen, 11, 12);
             string lSTRING__time_last_seen_minute=llGetSubString(lSTRING__time_last_seen, 14, 15);
             string lSTRING__time_last_seen_second=llGetSubString(lSTRING__time_last_seen, 17, 18);
-            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + "and\n" + gSTRING__owner_name + " was last seen on the\n" + lSTRING__time_last_seen_day + " " + lSTRING__time_last_seen_month + " " + lSTRING__time_last_seen_year + " at " + lSTRING__time_last_seen_hour +":" + lSTRING__time_last_seen_minute + ":" + lSTRING__time_last_seen_second + ".",gVECTOR__set_text_colour,1);
-        }
+            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + gSTRING__timezone + "and\n" + gSTRING__owner_name + " was last seen on the\n" + lSTRING__time_last_seen_day + " " + lSTRING__time_last_seen_month + " " + lSTRING__time_last_seen_year + " at " + lSTRING__time_last_seen_hour +":" + lSTRING__time_last_seen_minute + ":" + lSTRING__time_last_seen_second + gSTRING__timezone + ".",gVECTOR__set_text_colour,1);
+            }
    }
 }
