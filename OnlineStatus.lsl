@@ -1,5 +1,7 @@
 // Alternative Profile Picture v0.1 by djphil (CC-BY-NC-SA 2.0 BE) (https://forums.osgrid.org/viewtopic.php?f=5&t=5920)
 // Heavily modified by Baron Brown @ OSgrid May 2019
+// Latest version at https://github.com/BaronBrown/online_status
+//
 string gSTRING__timezone="GMT"; // Set the timezone for your local time
 string gSTRING__ampm; // Used to to hold the a.m. or p.m. modifier
 list gLIST__month_name = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; // Global list to hold the month names
@@ -10,6 +12,7 @@ string gSTRING__url = "http://helper.osgrid.org/get_picture_uuid.php?name="; // 
 string gSTRING__online_status; // Global string to hold the actual online / offline status from the llRequestAgentData.
 float gFLOAT__update_interval = 60; // Global float variable which holds the update interval in seconds.
 vector gVECTOR__set_text_colour; // Global vector variable that holds the colour of the settext.
+integer gINTEGER__picture_timer; // Global integer to hold a count of when to update the picture
 
 default
 {
@@ -41,7 +44,13 @@ default
 
 	timer() // This is the automatic timer that is called every number of seconds defined in the inital declaration
 	{
+		gINTEGER__picture_timer=gINTEGER__picture_timer+1; // Add one to the picture count
 		gSTRING__online_status = llRequestAgentData(llGetOwner(), DATA_ONLINE); // Update to the global variable that holds the actual online / offline data, this is passed to the dataserver section
+		if (gINTEGER__picture_timer == 60) // If the picture counter is 60, i.e. 1 hour, get a new picture
+		{
+			gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
+			gINTEGER__picture_timer=0; // Reset counter back to zero
+		}
 	}
 
 	dataserver(key queryid, string lSTRING__data)
