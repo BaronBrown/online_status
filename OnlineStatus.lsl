@@ -1,5 +1,6 @@
 // Alternative Profile Picture v0.1 by djphil (CC-BY-NC-SA 2.0 BE) (https://forums.osgrid.org/viewtopic.php?f=5&t=5920)
-// Heavily modified by Baron Brown @ OSgrid May 2019
+// Heavily modified by (c)Baron Brown @ OSgrid May 2019
+// Version 3.1
 // Latest version at https://github.com/BaronBrown/online_status
 //
 string gSTRING__timezone="GMT"; // Set the timezone for your local time
