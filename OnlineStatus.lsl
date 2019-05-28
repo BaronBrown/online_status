@@ -1,5 +1,11 @@
 // Alternative Profile Picture v0.1 by djphil (CC-BY-NC-SA 2.0 BE) (https://forums.osgrid.org/viewtopic.php?f=5&t=5920)
 // Heavily modified by (c)Baron Brown @ OSgrid May 2019
+// 
+// GNU GENERAL PUBLIC LICENSE
+//  Version 3, 29 June 2007
+// This program comes with ABSOLUTELY NO WARRANTY
+// This is free software, and you are welcome to redistribute it
+//   
 // Version 3.1
 // Latest version at https://github.com/BaronBrown/online_status
 //
