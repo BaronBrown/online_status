@@ -14,168 +14,187 @@ string gSTRING__online_status; // Global string to hold the actual online / offl
 float gFLOAT__update_interval = 60; // Global float variable which holds the update interval in seconds.
 vector gVECTOR__set_text_colour; // Global vector variable that holds the colour of the settext.
 integer gINTEGER__inventory_count; // Global integer to old the count of how many textures there are
+integer gINTEGER__get_picture_interval=0;
 
 default
 {
-    state_entry()
-    {
-        llSetText("Loading...",<1,1,0>,1);
-        gINTEGER__inventory_count = llGetInventoryNumber(INVENTORY_TEXTURE);
-        gINTEGER__inventory_count =gINTEGER__inventory_count-1;
-        // llSay(PUBLIC_CHANNEL, "Number of texture is " + (string)lINTEGER__count); // Used for debuging
-        llSetTexture(TEXTURE_BLANK, ALL_SIDES); // Clear existing images from all sides
-        llSetTexture(llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count), ALL_SIDES); // Get the "No Profile" image from the prims inventory
-        llSleep(10.0); // Used for debuging
-        gKEY__owner_key = llGetOwner(); // Get the owners key from the object
-        gSTRING__owner_name = llKey2Name(gKEY__owner_key); // Convert the key to the owners name
-        gSTRING__online_status = llRequestAgentData(gKEY__owner_key, DATA_ONLINE); // Request the agent data t find ut if they are on or off line
-        gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
-        // llSetTexture("c49e6fa4-a662-4664-bbf0-89306d65d861", ALL_SIDES); // Used for debug
-        llSetTimerEvent(gFLOAT__update_interval); // Start the timer for the number of seconds declared
-    }
+	on_rez(integer start_param)
+	{
+		llResetScript(); // Restarts the script every time the object is rezzed
+	}
 
-    touch_start(integer n)
-    {
-        llSay(PUBLIC_CHANNEL, "Updating picture for " + gSTRING__owner_name); // On touch, update the picture
-        gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
-    }
+	changed(integer change)
+	{
+		// reset script when the owner or the inventory changed
+		if (change & (CHANGED_OWNER))		{
+			llSetObjectDesc("");
+			llResetScript();
+		}
+		else if (change & (CHANGED_INVENTORY))
+		{
+			llResetScript();
+		}
+	}
 
-    http_response(key lKEY__response, integer status, list data, string lSTRING__body) // This is where the response from the server is processed
-    {
-        if (lKEY__response == gKEY__query) // Check to see if the response from the server was the same as the query sent
-        {
-            // lSTRING__body = "00000000-0000-0000-0000-000000000000"; // Used for debugging
-            lSTRING__body = llStringTrim(lSTRING__body, STRING_TRIM); // Remove any white space from the returned string
-            if (lSTRING__body == "00000000-0000-0000-0000-000000000000")
-            {
-                // llSay(PUBLIC_CHANNEL,"No picture, trying to get " + llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count));
-                llSay(PUBLIC_CHANNEL,"No picture, trying to get " + llGetInventoryName(INVENTORY_TEXTURE, 0));
-                llSetTexture(llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count), ALL_SIDES); // Get the "No Profile" image from the prims inventory
-                lSTRING__body=llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count);
-            }
-            llSetTexture(lSTRING__body, ALL_SIDES); // Set the texture on all sides to the image key returned from the server
-        }
-    }
+	state_entry()
+	{
+		llSetText("Loading...",<1,1,0>,1);
+		gINTEGER__inventory_count = llGetInventoryNumber(INVENTORY_TEXTURE);
+		gINTEGER__inventory_count = gINTEGER__inventory_count-1;
+		llSetTexture(TEXTURE_BLANK, ALL_SIDES); // Clear existing images from all sides
+		llSetTexture(llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count), ALL_SIDES); // Get the "No Profile" image from the prims inventory
+		gKEY__owner_key = llGetOwner(); // Get the owners key from the object
+		// gKEY__owner_key = "cf87e9af-335f-4ffd-924c-5ddee3493a36"; // Use a friends key
+		gSTRING__owner_name = llKey2Name(gKEY__owner_key); // Convert the key to the owners name
+		gSTRING__online_status = llRequestAgentData(gKEY__owner_key, DATA_ONLINE); // Request the agent data t find ut if they are on or off line
+		gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
+		llSetTimerEvent(gFLOAT__update_interval); // Start the timer for the number of seconds declared
+	}
 
-    timer() // This is the automatic timer that is called every number of seconds defined in the inital declaration
-    {
-        gSTRING__online_status = llRequestAgentData(llGetOwner(), DATA_ONLINE); // Update to the global variable that holds the actual online / offline data, this is passed to the dataserver section
-    }
+	touch_start(integer n)
+	{
+		llSay(PUBLIC_CHANNEL, "Updating picture for " + gSTRING__owner_name); // On touch, update the picture
+		gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
+	}
 
-    dataserver(key queryid, string lSTRING__data)
-    {
-        // lSTRING__data="0"; // Used for debugging, set to '1' for online and '0' for offline
-        string lSTRING__time_now=llGetTimestamp(); // Local string to get the current time
-        string lSTRING__time_now_year=llGetSubString(lSTRING__time_now, 0, 3); // Local string to set the current year
-        string lSTRING__time_now_month=llGetSubString(lSTRING__time_now, 5, 6); // Local string to set the current month
-        integer lINTEGER__time_now_month=(integer)lSTRING__time_now_month; // Local integer to convert the current string month to a number
-        lSTRING__time_now_month=llList2String(gLIST__month_name,(lINTEGER__time_now_month-1)); // update and change the month number to an actual name
-        string lSTRING__time_now_day=llGetSubString(lSTRING__time_now, 8, 9); // Local integer to set the current day
-        // lSTRING__time_now_day="03"; // Used for testing
-        integer lINTEGER__time_now_day=(integer)lSTRING__time_now_day; // Create a integer to hold the string value stripped of any leading 0 (zero)
-        lSTRING__time_now_day=(string)lINTEGER__time_now_day; // Pass back the stripped integer to the string
-        if (lSTRING__time_now_day == "1" || lSTRING__time_now_day == "21" || lSTRING__time_now_day == "31")
-        {
-            lSTRING__time_now_day=lSTRING__time_now_day + "st "; // Set the "01", "21" and "31" to "01st ", "21st " and "31st "
-        }
-        else if (lSTRING__time_now_day == "2" || lSTRING__time_now_day == "22")
-        {
-            lSTRING__time_now_day=lSTRING__time_now_day + "nd "; // Set the "02" and "22" to "02nd " and "22nd "
-        }
-        else if (lSTRING__time_now_day == "3" || lSTRING__time_now_day == "23")
-        {
-            lSTRING__time_now_day=lSTRING__time_now_day + "rd "; // Set the "03" and "23" to "03rd " and "23rd "
-        }
-        else
-        {
-            lSTRING__time_now_day=lSTRING__time_now_day+"th "; // Set all others to "??th "
-        }
-        string lSTRING__time_now_hour=llGetSubString(lSTRING__time_now, 11, 12); //Local string to set the hour
-        // lSTRING__time_now_hour="00"; // Used for debug
-        integer lINTEGER__time_now_hour=(integer)lSTRING__time_now_hour; // Used to hold the numerical hour
-        if (lINTEGER__time_now_hour > 12 && lINTEGER__time_now_hour <= 23)
-        {
-            gSTRING__ampm="p.m.";
-            lINTEGER__time_now_hour=lINTEGER__time_now_hour-12;
-        }
-        else if (lINTEGER__time_now_hour = 12)
-        {
-            gSTRING__ampm="p.m.";
-        }
-        else
-        {
-            gSTRING__ampm="a.m.";
-            if (lSTRING__time_now_hour=="00")
-            {
-                lINTEGER__time_now_hour=12; // If the time is 00:38, change it to 12:38
-            }
-        }
-        lSTRING__time_now_hour=(string)lINTEGER__time_now_hour;
-        string lSTRING__time_now_minute=llGetSubString(lSTRING__time_now, 14, 15); // Local string to set the minutes
-        string lSTRING__time_now_second=llGetSubString(lSTRING__time_now, 17, 18); // Local string to set the seconds
-        if((integer)lSTRING__data == TRUE) // Check to see if owner is online, if true
-        {
-            lSTRING__data = "online"; // Set the local variable to online
-            gVECTOR__set_text_colour=<0.0, 1.0, 0.0>; // Set the text colour to green
-            llSetObjectDesc(lSTRING__time_now); // Set the object description with the current time
-            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + " " + gSTRING__ampm + " " + gSTRING__timezone + " and\n" + gSTRING__owner_name + " is " + lSTRING__data + ".",gVECTOR__set_text_colour,1); // Set the object text
-        }
-        else
-        {
-            lSTRING__data = "Offline";
-            gVECTOR__set_text_colour=<1.0, 0.0, 0.0>;
-            string lSTRING__time_last_seen = llGetObjectDesc();
-            string lSTRING__time_last_seen_year=llGetSubString(lSTRING__time_last_seen, 0, 3);
-            string lSTRING__time_last_seen_month=llGetSubString(lSTRING__time_last_seen, 5, 6);
-            integer lINTEGER__time_last_seen_month=(integer)lSTRING__time_last_seen_month;
-            lSTRING__time_last_seen_month=llList2String(gLIST__month_name,(lINTEGER__time_last_seen_month-1));
-            string lSTRING__time_last_seen_day=llGetSubString(lSTRING__time_last_seen, 8, 9);
-            //lSTRING__time_last_seen_day="03"; // Used for testing
-            integer lINTEGER__time_last_seen_day=(integer)lSTRING__time_last_seen_day; // Create a integer to hold the string value stripped of any leading 0 (zero)
-            lSTRING__time_last_seen_day=(string)lINTEGER__time_last_seen_day; // Pass back the stripped integer to the string
+	http_response(key lKEY__response, integer status, list data, string lSTRING__body) // This is where the response from the server is processed
+	{
+		if (lKEY__response == gKEY__query) // Check to see if the response from the server was the same as the query sent
+		{
+			// lSTRING__body = "00000000-0000-0000-0000-000000000000"; // Used for debugging
+			lSTRING__body = llStringTrim(lSTRING__body, STRING_TRIM); // Remove any white space from the returned string
+			if (lSTRING__body == "00000000-0000-0000-0000-000000000000")
+			{
+				llSay(PUBLIC_CHANNEL,"No picture, trying to get " + llGetInventoryName(INVENTORY_TEXTURE, 0));
+				llSetTexture(llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count), ALL_SIDES); // Get the "No Profile" image from the prims inventory
+				lSTRING__body=llGetInventoryName(INVENTORY_TEXTURE, gINTEGER__inventory_count);
+			}
+			llSetTexture(lSTRING__body, ALL_SIDES); // Set the texture on all sides to the image key returned from the server
+		}
+	}
 
-            if (lSTRING__time_last_seen_day == "1" || lSTRING__time_last_seen_day == "21" || lSTRING__time_last_seen_day == "31")
-            {
-                lSTRING__time_last_seen_day=lSTRING__time_last_seen_day+"st ";
-            }
-            else if (lSTRING__time_last_seen_day == "2" || lSTRING__time_last_seen_day == "22")
-            {
-                lSTRING__time_last_seen_day=lSTRING__time_last_seen_day+"nd ";
-            }
-            else if (lSTRING__time_last_seen_day == "3" || lSTRING__time_last_seen_day == "23")
-            {
-                lSTRING__time_last_seen_day=lSTRING__time_last_seen_day+"rd ";
-            }
-            else
-            {
-                lSTRING__time_last_seen_day=lSTRING__time_last_seen_day+"th ";
-            }
-            string lSTRING__time_last_seen_hour=llGetSubString(lSTRING__time_last_seen, 11, 12);
-            // lSTRING__time_last_seen_hour="11"; // Used for debug
-            integer lINTEGER__time_last_seen_hour=(integer)lSTRING__time_last_seen_hour; // Used to hold the numerical hour
-            if (lINTEGER__time_last_seen_hour > 12)
-            {
-                gSTRING__ampm="p.m.";
-                lINTEGER__time_last_seen_hour=lINTEGER__time_last_seen_hour-12;
-            }
-            else if (lINTEGER__time_now_hour = 12)
-            {
-                gSTRING__ampm="p.m.";
-            }
-            else
-            {
-                gSTRING__ampm="a.m.";
-                if (lINTEGER__time_last_seen_hour==0)
-                {
-                    lINTEGER__time_last_seen_hour=12; // If the time is 00:38, change it to 12:38
-                }
-            }
-            lSTRING__time_last_seen_hour=(string)lINTEGER__time_last_seen_hour;
-            string lSTRING__time_last_seen_minute=llGetSubString(lSTRING__time_last_seen, 14, 15);
-            string lSTRING__time_last_seen_second=llGetSubString(lSTRING__time_last_seen, 17, 18);
-            llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + " " + gSTRING__ampm + " " + gSTRING__timezone + " and\n" + gSTRING__owner_name + " was last seen on the\n" + lSTRING__time_last_seen_day + " " + lSTRING__time_last_seen_month + " " + lSTRING__time_last_seen_year + " at " + lSTRING__time_last_seen_hour +":" + lSTRING__time_last_seen_minute + ":" + lSTRING__time_last_seen_second + " " + gSTRING__ampm + " " + gSTRING__timezone + ".",gVECTOR__set_text_colour,1);
-        }
-        gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
-        
-    }
+	timer() // This is the automatic timer that is called every number of seconds defined in the inital declaration
+	{
+		gSTRING__online_status = llRequestAgentData(llGetOwner(), DATA_ONLINE); // Update to the global variable that holds the actual online / offline data, this is passed to the dataserver section
+	}
+
+	dataserver(key queryid, string lSTRING__data)
+	{
+		string lSTRING__time_now = llGetTimestamp(); // Local string to get the current time
+		string lSTRING__time_now_year = llGetSubString(lSTRING__time_now, 0, 3); // Local string to set the current year
+		string lSTRING__time_now_month = llGetSubString(lSTRING__time_now, 5, 6); // Local string to set the current month
+		integer lINTEGER__time_now_month = (integer)lSTRING__time_now_month; // Local integer to convert the current string month to a number
+		lSTRING__time_now_month = llList2String(gLIST__month_name,(lINTEGER__time_now_month-1)); // update and change the month number to an actual name
+		string lSTRING__time_now_day = llGetSubString(lSTRING__time_now, 8, 9); // Local integer to set the current day
+		integer lINTEGER__time_now_day = (integer)lSTRING__time_now_day; // Create a integer to hold the string value stripped of any leading 0 (zero)
+		lSTRING__time_now_day = (string)lINTEGER__time_now_day; // Pass back the stripped integer to the string
+		if (lSTRING__time_now_day == "1" || lSTRING__time_now_day == "21" || lSTRING__time_now_day == "31")
+		{
+			lSTRING__time_now_day = lSTRING__time_now_day + "st "; // Set the "01", "21" and "31" to "01st ", "21st " and "31st "
+		}
+		else if (lSTRING__time_now_day == "2" || lSTRING__time_now_day == "22")
+		{
+			lSTRING__time_now_day = lSTRING__time_now_day + "nd "; // Set the "02" and "22" to "02nd " and "22nd "
+		}
+		else if (lSTRING__time_now_day == "3" || lSTRING__time_now_day == "23")
+		{
+			lSTRING__time_now_day = lSTRING__time_now_day + "rd "; // Set the "03" and "23" to "03rd " and "23rd "
+		}
+		else
+		{
+			lSTRING__time_now_day = lSTRING__time_now_day+"th "; // Set all others to "??th "
+		}
+		string lSTRING__time_now_hour = llGetSubString(lSTRING__time_now, 11, 12); //Local string to set the hour
+		integer lINTEGER__time_now_hour = (integer)lSTRING__time_now_hour; // Used to hold the numerical hour
+		if (lINTEGER__time_now_hour < 12)
+		{
+			gSTRING__ampm = "a.m.";
+		}
+		if (lINTEGER__time_now_hour == 0)
+		{
+			gSTRING__ampm = "a.m.";
+			lINTEGER__time_now_hour = 12;
+		}
+		if (lINTEGER__time_now_hour == 12)
+		{
+			gSTRING__ampm = "p.m.";
+		}
+		if (lINTEGER__time_now_hour > 12)
+		{
+			gSTRING__ampm = "p.m.";
+			lINTEGER__time_now_hour = lINTEGER__time_now_hour - 12;
+		}
+		lSTRING__time_now_hour = (string)lINTEGER__time_now_hour;
+		string lSTRING__time_now_minute = llGetSubString(lSTRING__time_now, 14, 15); // Local string to set the minutes
+		string lSTRING__time_now_second = llGetSubString(lSTRING__time_now, 17, 18); // Local string to set the seconds
+		if((integer)lSTRING__data == TRUE) // Check to see if owner is online, if true
+		{
+			lSTRING__data = "online"; // Set the local variable to online
+			gVECTOR__set_text_colour = <0.0, 1.0, 0.0>; // Set the text colour to green
+			llSetObjectDesc(lSTRING__time_now); // Set the object description with the current time
+			llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + " " + gSTRING__ampm + " " + gSTRING__timezone + " and\n" + gSTRING__owner_name + " is " + lSTRING__data + ".",gVECTOR__set_text_colour,1); // Set the object text
+		}
+		else
+		{
+			lSTRING__data = "Offline";
+			gVECTOR__set_text_colour = <1.0, 0.0, 0.0>;
+			string lSTRING__time_last_seen = llGetObjectDesc();
+			string lSTRING__time_last_seen_year = llGetSubString(lSTRING__time_last_seen, 0, 3);
+			string lSTRING__time_last_seen_month = llGetSubString(lSTRING__time_last_seen, 5, 6);
+			integer lINTEGER__time_last_seen_month = (integer)lSTRING__time_last_seen_month;
+			lSTRING__time_last_seen_month = llList2String(gLIST__month_name,(lINTEGER__time_last_seen_month-1));
+			string lSTRING__time_last_seen_day = llGetSubString(lSTRING__time_last_seen, 8, 9);
+			integer lINTEGER__time_last_seen_day = (integer)lSTRING__time_last_seen_day; // Create a integer to hold the string value stripped of any leading 0 (zero)
+			lSTRING__time_last_seen_day = (string)lINTEGER__time_last_seen_day; // Pass back the stripped integer to the string
+			if (lSTRING__time_last_seen_day == "1" || lSTRING__time_last_seen_day == "21" || lSTRING__time_last_seen_day == "31")
+			{
+				lSTRING__time_last_seen_day = lSTRING__time_last_seen_day+"st ";
+			}
+			else if (lSTRING__time_last_seen_day == "2" || lSTRING__time_last_seen_day == "22")
+			{
+				lSTRING__time_last_seen_day = lSTRING__time_last_seen_day+"nd ";
+			}
+			else if (lSTRING__time_last_seen_day == "3" || lSTRING__time_last_seen_day == "23")
+			{
+				lSTRING__time_last_seen_day = lSTRING__time_last_seen_day+"rd ";
+			}
+			else
+			{
+				lSTRING__time_last_seen_day = lSTRING__time_last_seen_day+"th ";
+			}
+			string lSTRING__time_last_seen_hour = llGetSubString(lSTRING__time_last_seen, 11, 12);
+			integer lINTEGER__time_last_seen_hour = (integer)lSTRING__time_last_seen_hour; // Used to hold the numerical hour
+			if (lINTEGER__time_last_seen_hour < 12)
+			{
+				gSTRING__ampm = "a.m.";
+			}
+			if (lINTEGER__time_last_seen_hour == 0)
+			{
+				gSTRING__ampm = "a.m.";
+				lINTEGER__time_last_seen_hour = 12;
+			}
+			if (lINTEGER__time_last_seen_hour == 12)
+			{
+				gSTRING__ampm = "p.m.";
+			}
+			if (lINTEGER__time_last_seen_hour > 12)
+			{
+				gSTRING__ampm = "p.m.";
+				lINTEGER__time_last_seen_hour = lINTEGER__time_last_seen_hour - 12;
+			}
+			lSTRING__time_last_seen_hour = (string)lINTEGER__time_last_seen_hour;
+			string lSTRING__time_last_seen_minute = llGetSubString(lSTRING__time_last_seen, 14, 15);
+			string lSTRING__time_last_seen_second = llGetSubString(lSTRING__time_last_seen, 17, 18);
+			llSetText("The time now is the " + lSTRING__time_now_day + lSTRING__time_now_month + " " + lSTRING__time_now_year + " at " + lSTRING__time_now_hour + ":" + lSTRING__time_now_minute + ":" + lSTRING__time_now_second + " " + gSTRING__ampm + " " + gSTRING__timezone + " and\n" + gSTRING__owner_name + " was last seen on the\n" + lSTRING__time_last_seen_day + " " + lSTRING__time_last_seen_month + " " + lSTRING__time_last_seen_year + " at " + lSTRING__time_last_seen_hour +":" + lSTRING__time_last_seen_minute + ":" + lSTRING__time_last_seen_second + " " + gSTRING__ampm + " " + gSTRING__timezone + ".",gVECTOR__set_text_colour,1);
+		}
+		if (gINTEGER__get_picture_interval == 5)
+		{
+			gINTEGER__get_picture_interval = 0;
+			gKEY__query = llHTTPRequest(gSTRING__url + gSTRING__owner_name, [HTTP_METHOD, "GET"], ""); // Query the url set in the declarations to try and obtain the picture
+		}
+		else
+		{
+			gINTEGER__get_picture_interval = gINTEGER__get_picture_interval+1;
+		}
+	}
 }
